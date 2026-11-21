@@ -9,6 +9,7 @@ val keystoreProps = Properties().apply {
     val f = rootProject.file("keystore.properties")
     if (f.exists()) f.inputStream().use { load(it) }
 }
+val hasReleaseKeystore = keystoreProps.getProperty("storeFile") != null
 
 android {
     namespace = "com.rahulmandal.flashtransfer"
@@ -23,22 +24,26 @@ android {
     }
 
     signingConfigs {
-        create("release") {
-            storeFile = rootProject.file(keystoreProps.getProperty("storeFile"))
-            storePassword = keystoreProps.getProperty("storePassword")
-            keyAlias = keystoreProps.getProperty("keyAlias")
-            keyPassword = keystoreProps.getProperty("keyPassword")
-            enableV1Signing = true
-            enableV2Signing = true
-            enableV3Signing = true
-            enableV4Signing = true
+        if (hasReleaseKeystore) {
+            create("release") {
+                storeFile = rootProject.file(keystoreProps.getProperty("storeFile"))
+                storePassword = keystoreProps.getProperty("storePassword")
+                keyAlias = keystoreProps.getProperty("keyAlias")
+                keyPassword = keystoreProps.getProperty("keyPassword")
+                enableV1Signing = true
+                enableV2Signing = true
+                enableV3Signing = true
+                enableV4Signing = true
+            }
         }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("release")
+            if (hasReleaseKeystore) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
 
