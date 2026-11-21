@@ -9,178 +9,354 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="20dp">
+        android:orientation="vertical">
 
-        <ImageView
-            android:id="@+id/ivPhoto"
-            android:layout_width="96dp"
-            android:layout_height="96dp"
-            android:layout_gravity="center_horizontal"
-            android:background="@drawable/bg_circle"
-            android:clipToOutline="true"
-            android:contentDescription="Developer photo"
-            android:scaleType="centerCrop"
-            android:src="@drawable/dev_photo" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="14dp"
-            android:fontFamily="sans-serif-black"
-            android:text="Rahul Mandal"
-            android:textColor="@color/text"
-            android:textSize="22sp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="4dp"
-            android:text="Developer"
-            android:textColor="@color/muted"
-            android:textSize="13sp" />
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginTop="18dp"
-            android:layout_marginBottom="4dp"
-            android:background="@color/stroke" />
-
+        <!-- Developer hero -->
         <LinearLayout
-            android:id="@+id/rowEmail"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:background="@drawable/bg_social_row"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:padding="14dp">
+            android:background="@drawable/bg_dev_header"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:paddingStart="24dp"
+            android:paddingTop="26dp"
+            android:paddingEnd="24dp"
+            android:paddingBottom="22dp">
 
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:contentDescription="Email"
-                android:src="@drawable/ic_mail"
-                android:tint="@color/amber" />
+            <FrameLayout
+                android:layout_width="132dp"
+                android:layout_height="132dp"
+                android:background="@drawable/bg_avatar_glow">
+
+                <FrameLayout
+                    android:layout_width="112dp"
+                    android:layout_height="112dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/bg_avatar_ring"
+                    android:padding="5dp">
+
+                    <ImageView
+                        android:id="@+id/ivPhoto"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/bg_circle"
+                        android:clipToOutline="true"
+                        android:contentDescription="Developer photo"
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/dev_photo" />
+                </FrameLayout>
+
+                <ImageView
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:layout_gravity="bottom|end"
+                    android:layout_marginEnd="10dp"
+                    android:layout_marginBottom="6dp"
+                    android:background="@drawable/bg_badge"
+                    android:contentDescription="Verified developer"
+                    android:elevation="4dp"
+                    android:padding="6dp"
+                    android:src="@drawable/ic_verified"
+                    android:tint="@color/bg" />
+            </FrameLayout>
 
             <TextView
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="14dp"
-                android:layout_weight="1"
-                android:ellipsize="end"
-                android:singleLine="true"
-                android:text="rahulmandal.official@zohomail.in"
+                android:layout_marginTop="16dp"
+                android:fontFamily="sans-serif-black"
+                android:letterSpacing="0.01"
+                android:text="Rahul Mandal"
                 android:textColor="@color/text"
-                android:textSize="14sp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/rowPhone"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:background="@drawable/bg_social_row"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:padding="14dp">
-
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:contentDescription="Phone"
-                android:src="@drawable/ic_phone"
-                android:tint="@color/green" />
+                android:textSize="23sp" />
 
             <TextView
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="14dp"
-                android:layout_weight="1"
-                android:singleLine="true"
-                android:text="+91 74308 52038"
-                android:textColor="@color/text"
-                android:textSize="14sp" />
+                android:layout_marginTop="3dp"
+                android:letterSpacing="0.02"
+                android:text="Android Developer"
+                android:textColor="@color/muted"
+                android:textSize="13sp" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <TextView
+                    style="@style/Chip"
+                    android:layout_marginEnd="8dp"
+                    android:text="ANDROID" />
+
+                <TextView
+                    style="@style/Chip"
+                    android:layout_marginEnd="8dp"
+                    android:text="KOTLIN" />
+
+                <TextView
+                    style="@style/Chip"
+                    android:text="OPEN SOURCE" />
+            </LinearLayout>
         </LinearLayout>
 
+        <!-- Connect -->
         <LinearLayout
-            android:id="@+id/rowGithub"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:background="@drawable/bg_social_row"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:padding="14dp">
-
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:contentDescription="GitHub"
-                android:src="@drawable/ic_github"
-                android:tint="@color/text" />
+            android:orientation="vertical"
+            android:paddingStart="20dp"
+            android:paddingTop="20dp"
+            android:paddingEnd="20dp"
+            android:paddingBottom="20dp">
 
             <TextView
-                android:layout_width="0dp"
+                style="@style/Label"
+                android:text="CONNECT" />
+
+            <LinearLayout
+                android:id="@+id/rowEmail"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="14dp"
-                android:layout_weight="1"
-                android:singleLine="true"
-                android:text="github.com/rmofficial"
-                android:textColor="@color/text"
-                android:textSize="14sp" />
-        </LinearLayout>
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_social_row"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="12dp">
 
-        <LinearLayout
-            android:id="@+id/rowFacebook"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:background="@drawable/bg_social_row"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:padding="14dp">
+                <FrameLayout
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:background="@drawable/bg_icon_circle">
 
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:contentDescription="Facebook"
-                android:src="@drawable/ic_facebook"
-                android:tint="@color/facebook" />
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:contentDescription="Email"
+                        android:src="@drawable/ic_mail"
+                        android:tint="@color/amber" />
+                </FrameLayout>
 
-            <TextView
-                android:layout_width="0dp"
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:letterSpacing="0.06"
+                        android:singleLine="true"
+                        android:text="EMAIL"
+                        android:textColor="@color/muted"
+                        android:textSize="10sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        style="@style/DevRowTitle"
+                        android:layout_marginTop="2dp"
+                        android:ellipsize="end"
+                        android:text="rahulmandal.official@zohomail.in" />
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:contentDescription="Open"
+                    android:src="@drawable/ic_chevron"
+                    android:tint="@color/muted" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/rowPhone"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="14dp"
-                android:layout_weight="1"
-                android:singleLine="true"
-                android:text="Connect on Facebook"
-                android:textColor="@color/text"
-                android:textSize="14sp" />
-        </LinearLayout>
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_social_row"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="12dp">
 
-        <Button
-            android:id="@+id/btnClose"
-            android:layout_width="match_parent"
-            android:layout_height="54dp"
-            android:layout_marginTop="18dp"
-            android:background="@drawable/bg_btn_primary"
-            android:stateListAnimator="@null"
-            android:text="Done"
-            android:textAllCaps="false"
-            android:textColor="#FF1A1000"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+                <FrameLayout
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:background="@drawable/bg_icon_circle">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:contentDescription="Phone"
+                        android:src="@drawable/ic_phone"
+                        android:tint="@color/green" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:letterSpacing="0.06"
+                        android:singleLine="true"
+                        android:text="PHONE"
+                        android:textColor="@color/muted"
+                        android:textSize="10sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        style="@style/DevRowTitle"
+                        android:layout_marginTop="2dp"
+                        android:text="+91 74308 52038" />
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:contentDescription="Call"
+                    android:src="@drawable/ic_chevron"
+                    android:tint="@color/muted" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/rowGithub"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_social_row"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="12dp">
+
+                <FrameLayout
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:background="@drawable/bg_icon_circle">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:contentDescription="GitHub"
+                        android:src="@drawable/ic_github"
+                        android:tint="@color/text" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:letterSpacing="0.06"
+                        android:singleLine="true"
+                        android:text="GITHUB"
+                        android:textColor="@color/muted"
+                        android:textSize="10sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        style="@style/DevRowTitle"
+                        android:layout_marginTop="2dp"
+                        android:text="github.com/rmofficial" />
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:contentDescription="Open GitHub"
+                    android:src="@drawable/ic_chevron"
+                    android:tint="@color/muted" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/rowFacebook"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_social_row"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="12dp">
+
+                <FrameLayout
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:background="@drawable/bg_icon_circle">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:contentDescription="Facebook"
+                        android:src="@drawable/ic_facebook"
+                        android:tint="@color/facebook" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:letterSpacing="0.06"
+                        android:singleLine="true"
+                        android:text="FACEBOOK"
+                        android:textColor="@color/muted"
+                        android:textSize="10sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        style="@style/DevRowTitle"
+                        android:layout_marginTop="2dp"
+                        android:text="Connect on Facebook" />
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:contentDescription="Open Facebook"
+                    android:src="@drawable/ic_chevron"
+                    android:tint="@color/muted" />
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/btnClose"
+                android:layout_width="match_parent"
+                android:layout_height="54dp"
+                android:layout_marginTop="20dp"
+                android:background="@drawable/bg_btn_primary"
+                android:stateListAnimator="@null"
+                android:text="Done"
+                android:textAllCaps="false"
+                android:textColor="#FF1A1000"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+        </LinearLayout>
     </LinearLayout>
 </ScrollView>
