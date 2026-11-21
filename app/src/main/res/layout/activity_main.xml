@@ -1,0 +1,346 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_main"
+    android:fillViewport="true"
+    android:scrollbars="none">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <!-- Header -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:contentDescription="Flash Transfer logo"
+                android:src="@drawable/ic_logo" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="14dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Flash Transfer"
+                    android:textColor="@color/text"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Lightning-fast Wi-Fi file sharing"
+                    android:textColor="@color/muted"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <ImageButton
+                android:id="@+id/btnAbout"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:background="@drawable/bg_icon_btn"
+                android:contentDescription="About"
+                android:src="@drawable/ic_info" />
+        </LinearLayout>
+
+        <!-- Status -->
+        <LinearLayout style="@style/Card" android:layout_marginTop="22dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <View
+                    android:id="@+id/viewDot"
+                    android:layout_width="10dp"
+                    android:layout_height="10dp"
+                    android:background="@drawable/dot_off" />
+
+                <TextView
+                    android:id="@+id/tvStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:text="Server offline"
+                    android:textColor="@color/text"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1.4"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/Label"
+                        android:text="SPEED" />
+
+                    <TextView
+                        android:id="@+id/tvSpeed"
+                        style="@style/Value"
+                        android:layout_marginTop="4dp"
+                        android:text="0 B/s"
+                        android:textColor="@color/amber" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/Label"
+                        android:text="SENT" />
+
+                    <TextView
+                        android:id="@+id/tvSent"
+                        style="@style/Value"
+                        android:layout_marginTop="4dp"
+                        android:text="0 B" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.8"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/Label"
+                        android:text="ACTIVE" />
+
+                    <TextView
+                        android:id="@+id/tvActive"
+                        style="@style/Value"
+                        android:layout_marginTop="4dp"
+                        android:text="0" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Start / Stop -->
+        <Button
+            android:id="@+id/btnStart"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/bg_btn_primary"
+            android:stateListAnimator="@null"
+            android:text="START SERVER"
+            android:textAllCaps="false"
+            android:textColor="#FF1A1000"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+
+        <!-- QR / link -->
+        <LinearLayout
+            android:id="@+id/cardQr"
+            style="@style/Card"
+            android:gravity="center_horizontal"
+            android:visibility="gone">
+
+            <TextView
+                style="@style/Label"
+                android:text="SCAN TO OPEN ON ANOTHER DEVICE" />
+
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:background="@drawable/bg_qr"
+                android:padding="14dp">
+
+                <ImageView
+                    android:id="@+id/ivQr"
+                    android:layout_width="220dp"
+                    android:layout_height="220dp"
+                    android:contentDescription="QR code" />
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/tvUrl"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:fontFamily="monospace"
+                android:gravity="center"
+                android:text="http://"
+                android:textColor="@color/amber"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvIface"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:gravity="center"
+                android:textColor="@color/muted"
+                android:textSize="12sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnCopy"
+                    style="@style/SmallBtn"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:text="Copy" />
+
+                <Button
+                    android:id="@+id/btnShare"
+                    style="@style/SmallBtn"
+                    android:layout_width="0dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:text="Share" />
+
+                <Button
+                    android:id="@+id/btnOpen"
+                    style="@style/SmallBtn"
+                    android:layout_width="0dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:text="Open" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Settings -->
+        <LinearLayout style="@style/Card">
+
+            <TextView
+                style="@style/Label"
+                android:text="SHARED FOLDER" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tvFolder"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:ellipsize="middle"
+                    android:singleLine="true"
+                    android:textColor="@color/text"
+                    android:textSize="14sp" />
+
+                <Button
+                    android:id="@+id/btnFolder"
+                    style="@style/SmallBtn"
+                    android:layout_width="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:text="Change" />
+            </LinearLayout>
+
+            <TextView
+                style="@style/Label"
+                android:layout_marginTop="18dp"
+                android:text="PORT" />
+
+            <EditText
+                android:id="@+id/etPort"
+                style="@style/Input"
+                android:importantForAutofill="no"
+                android:inputType="number"
+                android:maxLength="5"
+                android:text="8181" />
+
+            <TextView
+                style="@style/Label"
+                android:layout_marginTop="18dp"
+                android:text="PASSWORD (OPTIONAL)" />
+
+            <EditText
+                android:id="@+id/etPass"
+                style="@style/Input"
+                android:hint="Empty = no login"
+                android:importantForAutofill="no"
+                android:inputType="textPassword" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="If set, the browser asks for login. Username: admin"
+                android:textColor="@color/muted"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+        <!-- Tools -->
+        <LinearLayout style="@style/Card">
+
+            <TextView
+                style="@style/Label"
+                android:text="TOOLS" />
+
+            <Button
+                android:id="@+id/btnHotspot"
+                style="@style/SmallBtn"
+                android:layout_width="match_parent"
+                android:layout_marginTop="10dp"
+                android:gravity="start|center_vertical"
+                android:text="📶  Open Hotspot settings" />
+
+            <Button
+                android:id="@+id/btnBattery"
+                style="@style/SmallBtn"
+                android:layout_width="match_parent"
+                android:layout_marginTop="8dp"
+                android:gravity="start|center_vertical"
+                android:text="🔋  Allow background running" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="Tip: turn on Hotspot on this phone (or put both phones on the same Wi-Fi), press START, then scan the QR from the other phone and connect it to this Wi-Fi."
+                android:textColor="@color/muted"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvFooter"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:gravity="center"
+            android:padding="8dp"
+            android:text="⚡ Developed by Rahul Mandal"
+            android:textColor="#FF5D6F8F"
+            android:textSize="12sp" />
+    </LinearLayout>
+</ScrollView>
