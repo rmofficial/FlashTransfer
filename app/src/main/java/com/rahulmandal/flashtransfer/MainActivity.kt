@@ -11,6 +11,7 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
@@ -30,6 +31,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.rahulmandal.flashtransfer.databinding.ActivityMainBinding
 import com.rahulmandal.flashtransfer.databinding.DialogAboutBinding
+import java.io.File
 
 class MainActivity : AppCompatActivity() {
 
@@ -53,14 +55,31 @@ class MainActivity : AppCompatActivity() {
             if (uri == null) return@registerForActivityResult
             try {
                 contentResolver.takePersistableUriPermission(
-                    uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                 )
             } catch (_: Exception) {
+                try {
+                    contentResolver.takePersistableUriPermission(
+                        uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    )
+                } catch (_: Exception) {
+                }
             }
             treeUri = uri
             prefs.edit().putString("tree", uri.toString()).apply()
             updateFolderLabel()
             toast("Folder selected")
+        }
+
+    private val storagePermLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) setEntireStorage() else toast("Storage permission is required")
+        }
+
+    private val allFilesLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            if (hasAllFilesAccess()) setEntireStorage() else toast("All files access is required")
         }
 
     private val ticker = object : Runnable {
@@ -86,7 +105,6 @@ class MainActivity : AppCompatActivity() {
 
         binding.btnStart.setOnClickListener { if (ServerState.running) stopServer() else startServer() }
         binding.btnFolder.setOnClickListener { chooseFolder() }
-        binding.btnAbout.setOnClickListener { showAbout() }
         binding.tvFooter.setOnClickListener { showAbout() }
 
         binding.tvUrl.setOnClickListener { cycleAddress() }
@@ -188,7 +206,8 @@ class MainActivity : AppCompatActivity() {
         b.btnFolder.isEnabled = !running
 
         val now = SystemClock.elapsedRealtime()
-        val bytes = ServerState.bytesSent.get()
+        val sentBytes = ServerState.bytesSent.get()
+        val bytes = sentBytes + ServerState.bytesReceived.get()
         if (lastTime != 0L && now > lastTime) {
             val inst = maxOf(0.0, (bytes - lastBytes) * 1000.0 / (now - lastTime))
             smoothSpeed = smoothSpeed * 0.4 + inst * 0.6
@@ -197,7 +216,14 @@ class MainActivity : AppCompatActivity() {
         lastTime = now
         if (!running) smoothSpeed = 0.0
         b.tvSpeed.text = Fmt.speed(smoothSpeed)
-        b.tvSent.text = Fmt.size(bytes)
+        val remaining = ServerState.bytesRemaining.get()
+        val eta = if (running && smoothSpeed > 1 && remaining > 0) {
+            (remaining / smoothSpeed).toLong()
+        } else {
+            -1L
+        }
+        b.tvEta.text = if (eta >= 0) Fmt.duration(eta) else "—"
+        b.tvSent.text = Fmt.size(sentBytes)
         b.tvActive.text = ServerState.active.get().toString()
 
         if (running) {
@@ -212,7 +238,8 @@ class MainActivity : AppCompatActivity() {
                 lastQrUrl = null
             } else {
                 val a = addrs[addrIndex]
-                val url = "http://${a.ip}:${ServerState.port}"
+                val suffix = ServerState.path.let { if (it.isEmpty()) "" else "/$it" }
+                val url = "http://${a.ip}:${ServerState.port}$suffix"
                 currentUrl = url
                 b.ivQr.visibility = View.VISIBLE
                 if (url != lastQrUrl) {
@@ -258,10 +285,21 @@ class MainActivity : AppCompatActivity() {
 
     private fun hasStorageAccess(): Boolean {
         val u = treeUri ?: return false
+        if (u.scheme == "file") return hasAllFilesAccess()
         return try {
             contentResolver.persistedUriPermissions.any { it.uri == u && it.isReadPermission }
         } catch (_: Exception) {
             false
+        }
+    }
+
+    private fun hasAllFilesAccess(): Boolean {
+        return if (Build.VERSION.SDK_INT >= 30) {
+            Environment.isExternalStorageManager()
+        } else {
+            ContextCompat.checkSelfPermission(
+                this, Manifest.permission.READ_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED
         }
     }
 
@@ -290,6 +328,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun folderLabel(uri: Uri): String {
+        if (uri.scheme == "file") return "📁  Entire memory card"
         val id = try {
             DocumentsContract.getTreeDocumentId(uri)
         } catch (_: Exception) {
@@ -300,11 +339,49 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun chooseFolder() {
+        AlertDialog.Builder(this)
+            .setTitle("What to share")
+            .setItems(arrayOf("Pick a folder", "Entire memory card (all files)")) { _, which ->
+                if (which == 0) pickFolder() else shareEntireStorage()
+            }
+            .show()
+    }
+
+    private fun pickFolder() {
         try {
             folderLauncher.launch(null)
         } catch (_: Exception) {
             toast("Could not open folder picker")
         }
+    }
+
+    private fun shareEntireStorage() {
+        if (hasAllFilesAccess()) {
+            setEntireStorage()
+            return
+        }
+        if (Build.VERSION.SDK_INT >= 30) {
+            try {
+                allFilesLauncher.launch(
+                    Intent(
+                        Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
+                        Uri.parse("package:$packageName")
+                    )
+                )
+            } catch (_: Exception) {
+                safeStart(Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION))
+            }
+        } else {
+            storagePermLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
+        }
+    }
+
+    private fun setEntireStorage() {
+        val root = Environment.getExternalStorageDirectory()
+        treeUri = Uri.fromFile(root)
+        prefs.edit().putString("tree", treeUri.toString()).apply()
+        updateFolderLabel()
+        toast("Sharing entire memory card")
     }
 
     // ------------------------------------------------------------ about

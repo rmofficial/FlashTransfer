@@ -4,8 +4,9 @@
         <shape android:shape="oval">
             <gradient
                 android:angle="315"
-                android:endColor="#FFFF6D00"
-                android:startColor="#FFFFD54F" />
+                android:centerColor="#FFFFB020"
+                android:endColor="#FFFF8A1F"
+                android:startColor="#FFFFE08A" />
         </shape>
     </item>
     <item
@@ -14,7 +15,7 @@
         android:right="4dp"
         android:top="4dp">
         <shape android:shape="oval">
-            <solid android:color="#FF0B1226" />
+            <solid android:color="#FF0B1322" />
         </shape>
     </item>
 </layer-list>

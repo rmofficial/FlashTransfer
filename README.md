@@ -21,7 +21,7 @@ Share gigabytes over Wi-Fi or hotspot — no cables, no cloud, no account, no si
 
 **Flash Transfer** is a lightweight HTTP file-share server that runs entirely on your Android device. Pick a folder, start the server, and scan the QR code from any phone, tablet, laptop, or smart TV on the same network. Files stream directly from your storage to the browser — nothing is uploaded to a third-party server.
 
-Built for one purpose: moving **large files** (videos, backups, APKs, RAW photos) at full LAN speed with a download manager that can pause, resume, and parallelise.
+Built for one purpose: moving **large files** (videos, backups, APKs, RAW photos) at full LAN speed with a download manager that can pause, resume, and parallelise. The browser page also supports selecting multiple files and uploading them straight back into the shared folder.
 
 > **Example:** a 4 GB movie over a 5 GHz Wi-Fi link, transferred at 40–80 MB/s, with resume support if the connection drops.
 
@@ -42,6 +42,8 @@ Built for one purpose: moving **large files** (videos, backups, APKs, RAW photos
 | **Smart network detection** | Detects Hotspot, Wi-Fi, USB tethering, and Ethernet addresses, hotspot first |
 | **No storage permission** | Uses the Storage Access Framework folder picker; access is persisted |
 | **Browser-first UI** | Clean, responsive directory listing with file-type icons and download links |
+| **Multi-file upload** | Pick one or more files (or drag & drop), review the list, then upload with live progress |
+| **Private session URL** | Every server start gets a random path token, so plain links are not guessable |
 | **Tiny footprint** | ~3 MB APK, no analytics, no ads, no tracking |
 
 ---
@@ -77,6 +79,11 @@ The server implements a focused subset of HTTP/1.1:
 | `GET` | `/<path>/<file>?dl` | Force download (`Content-Disposition: attachment`) |
 | `HEAD` | any path | Headers only, no body |
 | `GET` | any file + `Range: bytes=…` | Partial content (`206`) or `416` when unsatisfiable |
+| `POST` | `/<path>/` | Upload a file into that folder |
+
+Uploads send the raw request body with `Content-Length`, the target filename in
+`X-File-Name` (URL-encoded), and an optional `Content-Type`. Duplicate names are
+saved as `file (1).ext`; failed transfers are cleaned up automatically.
 
 Authentication (when a password is set):
 
@@ -163,6 +170,7 @@ cp keystore.properties.example keystore.properties
 3. Tap **Start server**.
 4. Scan the QR code with another device, or open the displayed `http://<ip>:8181` link.
 5. Browse, download, and resume as needed.
+6. To receive files, use **Choose files → Upload** on the browser page. Multiple files can be queued at once.
 
 > Android does not allow apps to toggle the hotspot programmatically. Use the in-app shortcut to open the Hotspot settings screen instead.
 
@@ -205,6 +213,8 @@ FlashTransfer/
 
 - The server is intended for **trusted local networks** (home Wi-Fi, personal hotspot).
 - Enable the password option when sharing over a network you do not fully control.
+- Each server session uses a random URL path token; do not share the link publicly.
+- Uploads write into the selected folder, so re-select the folder if it was originally granted read-only access.
 - Traffic is plain HTTP; do not expose the server directly to the public internet.
 - Secrets (`keystore.properties`, keystores) are git-ignored.
 

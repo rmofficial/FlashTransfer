@@ -79,6 +79,12 @@
                 android:textColor="@color/muted"
                 android:textSize="13sp" />
 
+            <View
+                android:layout_width="46dp"
+                android:layout_height="2dp"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_accent_bar" />
+
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -87,19 +93,25 @@
                 android:orientation="horizontal">
 
                 <TextView
-                    style="@style/Chip"
-                    android:layout_marginEnd="8dp"
-                    android:text="ANDROID" />
+                    style="@style/PillGold"
+                    android:text="VERIFIED" />
 
                 <TextView
-                    style="@style/Chip"
-                    android:layout_marginEnd="8dp"
-                    android:text="KOTLIN" />
-
-                <TextView
-                    style="@style/Chip"
-                    android:text="OPEN SOURCE" />
+                    style="@style/Pill"
+                    android:layout_marginStart="8dp"
+                    android:text="CREATOR • FLASH TRANSFER" />
             </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:gravity="center"
+                android:letterSpacing="0.02"
+                android:lineSpacingExtra="2dp"
+                android:text="Crafting fast, private and beautiful tools for Android."
+                android:textColor="@color/muted"
+                android:textSize="11sp" />
         </LinearLayout>
 
         <!-- Connect -->
@@ -112,25 +124,46 @@
             android:paddingEnd="20dp"
             android:paddingBottom="20dp">
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <View
+                    android:layout_width="3dp"
+                    android:layout_height="14dp"
+                    android:background="@drawable/bg_accent_bar" />
+
+                <TextView
+                    style="@style/Label"
+                    android:layout_marginStart="8dp"
+                    android:text="GET IN TOUCH" />
+            </LinearLayout>
+
             <TextView
-                style="@style/Label"
-                android:text="CONNECT" />
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Reach out for collaborations, feedback or a quick hello."
+                android:textColor="@color/muted"
+                android:textSize="11sp" />
 
             <LinearLayout
                 android:id="@+id/rowEmail"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="14dp"
                 android:background="@drawable/bg_social_row"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:padding="12dp">
+                android:padding="14dp">
 
                 <FrameLayout
-                    android:layout_width="38dp"
-                    android:layout_height="38dp"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
                     android:background="@drawable/bg_icon_circle">
 
                     <ImageView
@@ -184,11 +217,11 @@
                 android:focusable="true"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:padding="12dp">
+                android:padding="14dp">
 
                 <FrameLayout
-                    android:layout_width="38dp"
-                    android:layout_height="38dp"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
                     android:background="@drawable/bg_icon_circle">
 
                     <ImageView
@@ -241,11 +274,11 @@
                 android:focusable="true"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:padding="12dp">
+                android:padding="14dp">
 
                 <FrameLayout
-                    android:layout_width="38dp"
-                    android:layout_height="38dp"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
                     android:background="@drawable/bg_icon_circle">
 
                     <ImageView
@@ -298,11 +331,11 @@
                 android:focusable="true"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:padding="12dp">
+                android:padding="14dp">
 
                 <FrameLayout
-                    android:layout_width="38dp"
-                    android:layout_height="38dp"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
                     android:background="@drawable/bg_icon_circle">
 
                     <ImageView
@@ -357,6 +390,15 @@
                 android:textColor="#FF1A1000"
                 android:textSize="16sp"
                 android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:gravity="center"
+                android:text="© 2026 Rahul Mandal • All rights reserved"
+                android:textColor="@color/muted"
+                android:textSize="11sp" />
         </LinearLayout>
     </LinearLayout>
 </ScrollView>

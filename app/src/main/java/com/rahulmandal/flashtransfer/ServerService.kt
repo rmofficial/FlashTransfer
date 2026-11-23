@@ -13,6 +13,7 @@ import android.os.IBinder
 import android.os.PowerManager
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
+import java.security.SecureRandom
 
 /**
  * Foreground service that keeps the HTTP server alive while the screen is off,
@@ -41,6 +42,7 @@ class ServerService : Service() {
         val port = intent?.getIntExtra(EXTRA_PORT, 8181) ?: 8181
         val root = intent?.getStringExtra(EXTRA_ROOT)
         val pass = intent?.getStringExtra(EXTRA_PASS) ?: ""
+        val path = randomToken()
 
         stopServerOnly()
         if (root.isNullOrEmpty()) {
@@ -49,17 +51,19 @@ class ServerService : Service() {
             return START_NOT_STICKY
         }
         try {
-            val s = FileServer(this, port, Uri.parse(root), pass)
+            val s = FileServer(this, port, Uri.parse(root), pass, path)
             s.start()
             server = s
             ServerState.port = port
+            ServerState.path = path
             ServerState.error = null
             ServerState.bytesSent.set(0)
+            ServerState.bytesRemaining.set(0)
             ServerState.active.set(0)
             ServerState.running = true
             acquireLocks()
             val ip = NetUtils.list().firstOrNull()?.ip
-            val text = if (ip != null) "http://$ip:$port" else "Port $port · waiting for network"
+            val text = if (ip != null) "http://$ip:$port/$path" else "Port $port · waiting for network"
             getSystemService(NotificationManager::class.java).notify(NOTIF_ID, buildNotification(text))
         } catch (e: Exception) {
             ServerState.error = "Could not start server on port $port (${e.message ?: "port busy"})"
@@ -76,10 +80,20 @@ class ServerService : Service() {
         server = null
     }
 
+    private fun randomToken(): String {
+        val chars = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+        val r = SecureRandom()
+        val sb = StringBuilder(10)
+        repeat(10) { sb.append(chars[r.nextInt(chars.length)]) }
+        return sb.toString()
+    }
+
     private fun shutdown() {
         stopServerOnly()
         releaseLocks()
         ServerState.running = false
+        ServerState.path = ""
+        ServerState.bytesRemaining.set(0)
         ServerState.active.set(0)
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
@@ -89,6 +103,7 @@ class ServerService : Service() {
         stopServerOnly()
         releaseLocks()
         ServerState.running = false
+        ServerState.bytesRemaining.set(0)
         super.onDestroy()
     }
 

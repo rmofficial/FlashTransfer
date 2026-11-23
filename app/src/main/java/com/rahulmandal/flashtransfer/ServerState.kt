@@ -7,7 +7,10 @@ import java.util.concurrent.atomic.AtomicLong
 object ServerState {
     @Volatile var running = false
     @Volatile var port = 8181
+    @Volatile var path = ""
     @Volatile var error: String? = null
     val bytesSent = AtomicLong(0)
+    val bytesReceived = AtomicLong(0)
+    val bytesRemaining = AtomicLong(0)
     val active = AtomicInteger(0)
 }
