@@ -38,6 +38,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var prefs: SharedPreferences
     private var treeUri: Uri? = null
+    private var filesMode = false
+    private var shareFiles: List<Uri> = emptyList()
 
     private val handler = Handler(Looper.getMainLooper())
     private var addrIndex = 0
@@ -67,9 +69,31 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             treeUri = uri
-            prefs.edit().putString("tree", uri.toString()).apply()
+            filesMode = false
+            prefs.edit().putString("tree", uri.toString()).putBoolean("filesMode", false).apply()
             updateFolderLabel()
             toast("Folder selected")
+        }
+
+    private val filesLauncher =
+        registerForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+            if (uris.isNullOrEmpty()) return@registerForActivityResult
+            for (u in uris) {
+                try {
+                    contentResolver.takePersistableUriPermission(
+                        u, Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    )
+                } catch (_: Exception) {
+                }
+            }
+            shareFiles = uris
+            filesMode = true
+            prefs.edit()
+                .putBoolean("filesMode", true)
+                .putString("files", uris.joinToString("\n") { it.toString() })
+                .apply()
+            updateFolderLabel()
+            toast("${uris.size} file(s) selected")
         }
 
     private val storagePermLauncher =
@@ -99,13 +123,19 @@ class MainActivity : AppCompatActivity() {
 
         prefs = getSharedPreferences("flash", MODE_PRIVATE)
         treeUri = prefs.getString("tree", null)?.let { Uri.parse(it) }
+        filesMode = prefs.getBoolean("filesMode", false)
+        shareFiles = prefs.getString("files", null)
+            ?.split('\n')
+            ?.filter { it.isNotBlank() }
+            ?.map { Uri.parse(it) }
+            ?: emptyList()
         binding.etPort.setText(prefs.getString("port", "8181"))
         binding.etPass.setText(prefs.getString("pass", ""))
         updateFolderLabel()
 
         binding.btnStart.setOnClickListener { if (ServerState.running) stopServer() else startServer() }
         binding.btnFolder.setOnClickListener { chooseFolder() }
-        binding.tvFooter.setOnClickListener { showAbout() }
+        binding.cardAbout.setOnClickListener { showAbout() }
 
         binding.tvUrl.setOnClickListener { cycleAddress() }
         binding.ivQr.setOnClickListener { cycleAddress() }
@@ -158,8 +188,13 @@ class MainActivity : AppCompatActivity() {
     // ------------------------------------------------------------ start / stop
 
     private fun startServer() {
+        if (filesMode && (shareFiles.isEmpty() || !hasFilesAccess())) {
+            toast("Choose files to share first")
+            pickFiles()
+            return
+        }
         val root = treeUri
-        if (root == null || !hasStorageAccess()) {
+        if (!filesMode && (root == null || !hasStorageAccess())) {
             toast("Choose a folder to share first")
             chooseFolder()
             return
@@ -177,8 +212,15 @@ class MainActivity : AppCompatActivity() {
 
         val i = Intent(this, ServerService::class.java)
             .putExtra(ServerService.EXTRA_PORT, port)
-            .putExtra(ServerService.EXTRA_ROOT, root.toString())
             .putExtra(ServerService.EXTRA_PASS, pass)
+        if (filesMode) {
+            i.putStringArrayListExtra(
+                ServerService.EXTRA_FILES,
+                ArrayList(shareFiles.map { it.toString() })
+            )
+        } else {
+            i.putExtra(ServerService.EXTRA_ROOT, root.toString())
+        }
         ContextCompat.startForegroundService(this, i)
     }
 
@@ -293,6 +335,18 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun hasFilesAccess(): Boolean {
+        if (shareFiles.isEmpty()) return false
+        return try {
+            val granted = contentResolver.persistedUriPermissions
+                .filter { it.isReadPermission }
+                .mapTo(HashSet()) { it.uri }
+            shareFiles.all { it in granted }
+        } catch (_: Exception) {
+            false
+        }
+    }
+
     private fun hasAllFilesAccess(): Boolean {
         return if (Build.VERSION.SDK_INT >= 30) {
             Environment.isExternalStorageManager()
@@ -324,7 +378,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateFolderLabel() {
         val u = treeUri
-        binding.tvFolder.text = if (u == null) "No folder selected — tap Change" else folderLabel(u)
+        binding.tvFolder.text = when {
+            filesMode && shareFiles.isNotEmpty() ->
+                "📄  ${shareFiles.size} file(s) selected"
+            filesMode -> "No files selected — tap Change"
+            u == null -> "No folder selected — tap Change"
+            else -> folderLabel(u)
+        }
     }
 
     private fun folderLabel(uri: Uri): String {
@@ -341,8 +401,18 @@ class MainActivity : AppCompatActivity() {
     private fun chooseFolder() {
         AlertDialog.Builder(this)
             .setTitle("What to share")
-            .setItems(arrayOf("Pick a folder", "Entire memory card (all files)")) { _, which ->
-                if (which == 0) pickFolder() else shareEntireStorage()
+            .setItems(
+                arrayOf(
+                    "Pick a folder",
+                    "Share selected files",
+                    "Entire memory card (all files)"
+                )
+            ) { _, which ->
+                when (which) {
+                    0 -> pickFolder()
+                    1 -> pickFiles()
+                    else -> shareEntireStorage()
+                }
             }
             .show()
     }
@@ -352,6 +422,14 @@ class MainActivity : AppCompatActivity() {
             folderLauncher.launch(null)
         } catch (_: Exception) {
             toast("Could not open folder picker")
+        }
+    }
+
+    private fun pickFiles() {
+        try {
+            filesLauncher.launch(arrayOf("*/*"))
+        } catch (_: Exception) {
+            toast("Could not open file picker")
         }
     }
 
@@ -379,7 +457,11 @@ class MainActivity : AppCompatActivity() {
     private fun setEntireStorage() {
         val root = Environment.getExternalStorageDirectory()
         treeUri = Uri.fromFile(root)
-        prefs.edit().putString("tree", treeUri.toString()).apply()
+        filesMode = false
+        prefs.edit()
+            .putString("tree", treeUri.toString())
+            .putBoolean("filesMode", false)
+            .apply()
         updateFolderLabel()
         toast("Sharing entire memory card")
     }

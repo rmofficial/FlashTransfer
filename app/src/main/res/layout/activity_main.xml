@@ -72,7 +72,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="3dp"
                     android:letterSpacing="0.02"
-                    android:text="Premium Wi-Fi file sharing"
+                    android:text="Lightning-fast Wi-Fi file sharing"
                     android:textColor="@color/muted"
                     android:textSize="12sp" />
             </LinearLayout>
@@ -80,7 +80,7 @@
             <TextView
                 style="@style/Pill"
                 android:layout_marginStart="8dp"
-                android:text="v1.0.8" />
+                android:text="v1.0.9" />
         </LinearLayout>
 
         <!-- Live status + telemetry -->
@@ -233,6 +233,7 @@
         <LinearLayout
             android:id="@+id/cardQr"
             style="@style/Card"
+            android:background="@drawable/bg_card_premium"
             android:gravity="center_horizontal"
             android:visibility="gone">
 
@@ -242,50 +243,126 @@
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
-                <TextView
-                    style="@style/Label"
+                <LinearLayout
                     android:layout_width="0dp"
+                    android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="CONNECTION" />
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <View
+                        android:layout_width="3dp"
+                        android:layout_height="30dp"
+                        android:background="@drawable/bg_accent_bar" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            style="@style/Label"
+                            android:text="SCAN TO CONNECT" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="3dp"
+                            android:text="Point your camera at the code"
+                            android:textColor="@color/muted"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+                </LinearLayout>
 
                 <TextView
                     style="@style/Pill"
-                    android:text="●  READY TO SCAN"
+                    android:text="●  LIVE"
                     android:textColor="@color/green" />
             </LinearLayout>
 
             <FrameLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
-                android:background="@drawable/bg_qr"
-                android:padding="14dp">
+                android:layout_marginTop="20dp"
+                android:background="@drawable/bg_glow"
+                android:padding="4dp">
 
-                <ImageView
-                    android:id="@+id/ivQr"
-                    android:layout_width="220dp"
-                    android:layout_height="220dp"
-                    android:contentDescription="QR code" />
+                <FrameLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_qr_premium"
+                    android:padding="24dp">
+
+                    <ImageView
+                        android:id="@+id/ivQr"
+                        android:layout_width="184dp"
+                        android:layout_height="184dp"
+                        android:contentDescription="QR code" />
+                </FrameLayout>
             </FrameLayout>
 
-            <TextView
-                android:id="@+id/tvUrl"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
-                android:fontFamily="monospace"
-                android:gravity="center"
-                android:letterSpacing="0.01"
-                android:text="http://"
-                android:textColor="@color/amber"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_url_box"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="14dp"
+                android:paddingTop="12dp"
+                android:paddingEnd="14dp"
+                android:paddingBottom="12dp">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:letterSpacing="0.14"
+                        android:text="DIRECT LINK"
+                        android:textColor="@color/muted"
+                        android:textSize="9sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvUrl"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:ellipsize="middle"
+                        android:fontFamily="monospace"
+                        android:singleLine="true"
+                        android:text="http://"
+                        android:textColor="@color/amber"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:background="@drawable/bg_pill_dark"
+                    android:paddingStart="8dp"
+                    android:paddingTop="4dp"
+                    android:paddingEnd="8dp"
+                    android:paddingBottom="4dp"
+                    android:text="TAP"
+                    android:textColor="@color/muted"
+                    android:textSize="9sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/tvIface"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
+                android:layout_marginTop="8dp"
                 android:gravity="center"
                 android:textColor="@color/muted"
                 android:textSize="12sp" />
@@ -293,20 +370,24 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
+                android:layout_marginTop="16dp"
                 android:orientation="horizontal">
 
                 <Button
                     android:id="@+id/btnCopy"
                     style="@style/SmallBtn"
                     android:layout_width="0dp"
+                    android:layout_height="50dp"
                     android:layout_weight="1"
-                    android:text="Copy" />
+                    android:background="@drawable/bg_btn_primary"
+                    android:text="Copy link"
+                    android:textColor="@color/ink" />
 
                 <Button
                     android:id="@+id/btnShare"
                     style="@style/SmallBtn"
                     android:layout_width="0dp"
+                    android:layout_height="50dp"
                     android:layout_marginStart="8dp"
                     android:layout_weight="1"
                     android:text="Share" />
@@ -315,6 +396,7 @@
                     android:id="@+id/btnOpen"
                     style="@style/SmallBtn"
                     android:layout_width="0dp"
+                    android:layout_height="50dp"
                     android:layout_marginStart="8dp"
                     android:layout_weight="1"
                     android:text="Open" />
@@ -470,15 +552,96 @@
             </LinearLayout>
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/tvFooter"
+        <!-- About -->
+        <LinearLayout
+            android:id="@+id/cardAbout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="26dp"
-            android:gravity="center"
-            android:padding="10dp"
-            android:text="© 2026 Rahul Mandal  •  Tap for About"
-            android:textColor="#FF5D6F8F"
-            android:textSize="12sp" />
+            android:layout_marginTop="18dp"
+            android:background="@drawable/bg_card"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground"
+            android:orientation="vertical"
+            android:padding="18dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <View
+                    android:layout_width="3dp"
+                    android:layout_height="14dp"
+                    android:background="@drawable/bg_accent_bar" />
+
+                <TextView
+                    style="@style/Label"
+                    android:layout_width="0dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:text="ABOUT" />
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:contentDescription="Open about"
+                    android:src="@drawable/ic_chevron"
+                    android:tint="@color/muted" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="46dp"
+                    android:layout_height="46dp"
+                    android:contentDescription="Flash Transfer logo"
+                    android:src="@drawable/ic_logo" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="sans-serif-black"
+                        android:text="Flash Transfer"
+                        android:textColor="@color/text"
+                        android:textSize="17sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Lightning-fast Wi-Fi file sharing"
+                        android:textColor="@color/muted"
+                        android:textSize="12sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="14dp"
+                android:background="@drawable/bg_divider" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="Tap to view developer info, contact and social links"
+                android:textColor="@color/muted"
+                android:textSize="11sp" />
+        </LinearLayout>
     </LinearLayout>
 </ScrollView>

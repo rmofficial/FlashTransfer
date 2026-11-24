@@ -42,16 +42,21 @@ class ServerService : Service() {
         val port = intent?.getIntExtra(EXTRA_PORT, 8181) ?: 8181
         val root = intent?.getStringExtra(EXTRA_ROOT)
         val pass = intent?.getStringExtra(EXTRA_PASS) ?: ""
+        val files = intent?.getStringArrayListExtra(EXTRA_FILES)
+            ?.mapNotNull { it.takeIf { u -> u.isNotBlank() } }
+            ?.map { Uri.parse(it) }
+            ?: emptyList()
         val path = randomToken()
 
         stopServerOnly()
-        if (root.isNullOrEmpty()) {
-            ServerState.error = "No shared folder selected"
+        if (files.isEmpty() && root.isNullOrEmpty()) {
+            ServerState.error = "Nothing selected to share"
             shutdown()
             return START_NOT_STICKY
         }
         try {
-            val s = FileServer(this, port, Uri.parse(root), pass, path)
+            val rootUri = root?.let { Uri.parse(it) } ?: Uri.EMPTY
+            val s = FileServer(this, port, rootUri, pass, path, files)
             s.start()
             server = s
             ServerState.port = port
@@ -174,6 +179,7 @@ class ServerService : Service() {
         const val EXTRA_PORT = "port"
         const val EXTRA_ROOT = "root"
         const val EXTRA_PASS = "pass"
+        const val EXTRA_FILES = "files"
         private const val CHANNEL_ID = "flash_server"
         private const val NOTIF_ID = 8181
     }

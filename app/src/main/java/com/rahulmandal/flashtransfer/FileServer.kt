@@ -2,10 +2,15 @@ package com.rahulmandal.flashtransfer
 
 import android.content.ContentResolver
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.media.MediaMetadataRetriever
 import android.net.Uri
+import android.os.Build
 import android.os.ParcelFileDescriptor
 import android.provider.DocumentsContract
 import android.util.Base64
+import android.util.Size
 import android.webkit.MimeTypeMap
 import java.io.BufferedInputStream
 import java.io.ByteArrayOutputStream
@@ -38,30 +43,54 @@ import java.util.concurrent.ThreadFactory
  *  - HTTP keep-alive, Range / resume, HEAD, multi-connection (download managers)
  *  - Optional Basic auth (user "admin")
  *
- * A root can be either a SAF tree Uri (a picked folder) or a plain file:// path
- * (the whole memory card, using MANAGE_EXTERNAL_STORAGE / READ_EXTERNAL_STORAGE).
+ * A root can be either a SAF tree Uri (a picked folder), a plain file:// path
+ * (the whole memory card, using MANAGE_EXTERNAL_STORAGE / READ_EXTERNAL_STORAGE),
+ * or a list of individually picked files shown as one flat shared folder.
  */
 class FileServer(
     context: Context,
     private val port: Int,
     rootUri: Uri,
     private val password: String,
-    private val pathToken: String = ""
+    private val pathToken: String = "",
+    private val sharedFiles: List<Uri> = emptyList()
 ) {
 
     private val resolver: ContentResolver = context.applicationContext.contentResolver
     private val treeUri: Uri = rootUri
-    private val fileMode: Boolean = rootUri.scheme == "file"
+    private val filesMode: Boolean = sharedFiles.isNotEmpty()
+    private val fileMode: Boolean = !filesMode && rootUri.scheme == "file"
     private val rootFile: File? = if (fileMode) File(rootUri.path ?: "/") else null
-    private val rootDocId: String =
-        if (fileMode) rootFile!!.absolutePath else DocumentsContract.getTreeDocumentId(rootUri)
+    private val rootDocId: String = when {
+        fileMode -> rootFile!!.absolutePath
+        filesMode -> ""
+        else -> DocumentsContract.getTreeDocumentId(rootUri)
+    }
     private val rootDoc = Doc(
         rootDocId,
-        if (fileMode) "Storage" else "Shared folder",
+        when {
+            fileMode -> "Storage"
+            filesMode -> "Shared files"
+            else -> "Shared folder"
+        },
         true, 0L, 0L
     )
 
+    /** Picked files resolved once, with display names made unique for the listing. */
+    private val fileDocs: List<Doc> by lazy {
+        val used = HashSet<String>()
+        sharedFiles.mapNotNull { u ->
+            val d = documentMeta(u) ?: return@mapNotNull null
+            val name = uniqueName(used, d.name)
+            used.add(name)
+            if (name == d.name) d else d.copy(name = name)
+        }
+    }
+
     private var ssc: ServerSocketChannel? = null
+
+    /** Small JPEG thumbnails for image/video files, keyed by document id. */
+    private val thumbCache = ConcurrentHashMap<String, ByteArray>()
 
     @Volatile
     private var running = false
@@ -150,7 +179,39 @@ class FileServer(
         return out
     }
 
+    /** Reads metadata for a single picked document Uri (file share mode). */
+    private fun documentMeta(uri: Uri): Doc? {
+        val projection = arrayOf(
+            DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+            DocumentsContract.Document.COLUMN_MIME_TYPE,
+            DocumentsContract.Document.COLUMN_SIZE,
+            DocumentsContract.Document.COLUMN_LAST_MODIFIED
+        )
+        try {
+            resolver.query(uri, projection, null, null, null)?.use { c ->
+                if (c.moveToFirst()) {
+                    val name = c.getString(0) ?: uri.lastPathSegment ?: "file"
+                    val mime = c.getString(1)
+                    val size = if (c.isNull(2)) -1L else c.getLong(2)
+                    val modified = if (c.isNull(3)) 0L else c.getLong(3)
+                    return Doc(
+                        uri.toString(), name,
+                        mime == DocumentsContract.Document.MIME_TYPE_DIR,
+                        size, modified
+                    )
+                }
+            }
+        } catch (_: Exception) {
+        }
+        return Doc(uri.toString(), uri.lastPathSegment ?: "file", false, -1L, 0L)
+    }
+
     private fun resolve(segments: List<String>): Doc? {
+        if (filesMode) {
+            if (segments.isEmpty()) return rootDoc
+            if (segments.size != 1) return null
+            return fileDocs.firstOrNull { it.name == segments[0] }
+        }
         if (fileMode) {
             val root = rootFile ?: return null
             var f = root
@@ -443,6 +504,10 @@ class FileServer(
     private fun handleUpload(
         req: Req, sc: SocketChannel, ins: InputStream, uri: String
     ): Boolean {
+        if (filesMode) {
+            sendText(sc, 403, "Forbidden", "Uploads are not available in file share mode", false)
+            return false
+        }
         val length = req.headers["content-length"]?.trim()?.toLongOrNull()
         if (length == null) {
             sendText(sc, 411, "Length Required", "Content-Length header is required", false)
@@ -649,6 +714,9 @@ class FileServer(
         val keep = req.keepAlive
         val headOnly = req.method == "HEAD"
         val dl = req.query.split('&').any { it == "dl" || it.startsWith("dl=") }
+        if (req.query.split('&').any { it == "thumb" || it.startsWith("thumb=") }) {
+            return serveThumbnail(req, sc, doc)
+        }
 
         val source = try {
             if (fileMode) {
@@ -660,7 +728,7 @@ class FileServer(
                     Source(f.length(), mime) { c, start, count -> streamFile(f, c, start, count) }
                 } else null
             } else {
-                val fileUri = documentUri(doc.docId)
+                val fileUri = if (filesMode) Uri.parse(doc.docId) else documentUri(doc.docId)
                 val pfd = try {
                     resolver.openFileDescriptor(fileUri, "r")
                 } catch (_: Exception) {
@@ -758,6 +826,143 @@ class FileServer(
 
     private fun extensionOf(name: String): String =
         name.substringAfterLast('.', "").lowercase(Locale.ROOT)
+
+    // ------------------------------------------------------------------ thumbnails
+
+    private fun isImage(name: String): Boolean = when (extensionOf(name)) {
+        "jpg", "jpeg", "png", "gif", "webp", "heic", "heif", "bmp", "avif" -> true
+        else -> false
+    }
+
+    private fun isVideo(name: String): Boolean = when (extensionOf(name)) {
+        "mp4", "mkv", "avi", "mov", "webm", "3gp", "m4v", "ts" -> true
+        else -> false
+    }
+
+    private fun thumbnail(doc: Doc): ByteArray? {
+        if (!isImage(doc.name) && !isVideo(doc.name)) return null
+        thumbCache[doc.docId]?.let { return it }
+        val bytes = try {
+            buildThumbnail(doc)
+        } catch (_: Exception) {
+            null
+        } ?: return null
+        if (thumbCache.size > 512) thumbCache.clear()
+        thumbCache[doc.docId] = bytes
+        return bytes
+    }
+
+    private fun buildThumbnail(doc: Doc): ByteArray? {
+        val contentUri: Uri? = when {
+            filesMode -> Uri.parse(doc.docId)
+            fileMode -> null
+            else -> documentUri(doc.docId)
+        }
+        if (contentUri != null && Build.VERSION.SDK_INT >= 29) {
+            try {
+                resolver.loadThumbnail(contentUri, Size(THUMB_PX, THUMB_PX), null)
+                    ?.let { return compressThumb(it) }
+            } catch (_: Exception) {
+            }
+        }
+        if (isVideo(doc.name)) return videoThumbnail(doc)
+        return decodeScaled { openInput(doc) }
+    }
+
+    private fun openInput(doc: Doc): InputStream? {
+        if (fileMode) {
+            val f = File(doc.docId)
+            return if (f.isFile && f.canRead()) FileInputStream(f) else null
+        }
+        return try {
+            val uri = if (filesMode) Uri.parse(doc.docId) else documentUri(doc.docId)
+            resolver.openInputStream(uri)
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun decodeScaled(open: () -> InputStream?): ByteArray? {
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        open()?.use { BitmapFactory.decodeStream(it, null, bounds) } ?: return null
+        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
+        val opts = BitmapFactory.Options().apply {
+            inSampleSize = sampleSize(bounds.outWidth, bounds.outHeight)
+        }
+        val bmp = open()?.use { BitmapFactory.decodeStream(it, null, opts) } ?: return null
+        return compressThumb(bmp)
+    }
+
+    private fun sampleSize(w: Int, h: Int): Int {
+        var s = 1
+        val maxDim = maxOf(w, h)
+        while (maxDim / (s * 2) >= THUMB_PX) s *= 2
+        return s
+    }
+
+    private fun compressThumb(bmp: Bitmap): ByteArray {
+        val maxDim = maxOf(bmp.width, bmp.height)
+        val scaled = if (maxDim > THUMB_PX) {
+            val ratio = THUMB_PX.toFloat() / maxDim
+            Bitmap.createScaledBitmap(
+                bmp,
+                (bmp.width * ratio).toInt().coerceAtLeast(1),
+                (bmp.height * ratio).toInt().coerceAtLeast(1),
+                true
+            )
+        } else {
+            bmp
+        }
+        val out = ByteArrayOutputStream()
+        scaled.compress(Bitmap.CompressFormat.JPEG, 82, out)
+        if (scaled !== bmp) scaled.recycle()
+        bmp.recycle()
+        return out.toByteArray()
+    }
+
+    private fun videoThumbnail(doc: Doc): ByteArray? {
+        val retriever = MediaMetadataRetriever()
+        var pfd: ParcelFileDescriptor? = null
+        try {
+            if (fileMode) {
+                retriever.setDataSource(doc.docId)
+            } else {
+                val uri = if (filesMode) Uri.parse(doc.docId) else documentUri(doc.docId)
+                pfd = resolver.openFileDescriptor(uri, "r") ?: return null
+                retriever.setDataSource(pfd.fileDescriptor)
+            }
+            val frame = retriever.getFrameAtTime(0, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
+                ?: retriever.frameAtTime
+                ?: return null
+            return compressThumb(frame)
+        } catch (_: Exception) {
+            return null
+        } finally {
+            try {
+                retriever.release()
+            } catch (_: Exception) {
+            }
+            try {
+                pfd?.close()
+            } catch (_: Exception) {
+            }
+        }
+    }
+
+    private fun serveThumbnail(req: Req, sc: SocketChannel, doc: Doc): Boolean {
+        val keep = req.keepAlive
+        val headOnly = req.method == "HEAD"
+        val bytes = thumbnail(doc)
+        if (bytes == null) {
+            sendText(sc, 404, "Not Found", "No thumbnail", keep)
+            return keep
+        }
+        sendBytes(
+            sc, 200, "OK", "image/jpeg", bytes,
+            listOf("Cache-Control" to "public, max-age=3600"), keep, headOnly
+        )
+        return keep
+    }
 
     private fun account(n: Long) {
         ServerState.bytesSent.addAndGet(n)
@@ -907,7 +1112,7 @@ class FileServer(
     }
 
     private fun listing(dir: Doc, uri: String): String {
-        val items = queryChildren(dir.docId)
+        val items = (if (filesMode) fileDocs else queryChildren(dir.docId))
             .sortedWith(compareBy({ !it.isDir }, { it.name.lowercase(Locale.ROOT) }))
         val df = SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.US)
         var folders = 0
@@ -918,26 +1123,27 @@ class FileServer(
         if (uri != "/") {
             rows.append("<div class='row' data-n='..'><span class='ic'>⬆️</span>")
                 .append("<a class='nm' href='../'>.. (parent folder)</a>")
-                .append("<span class='sz'></span><span class='dt'></span><span class='dl'></span></div>")
+                .append("<span class='sz'>—</span><span class='dt'></span><span class='dl'></span></div>")
         }
         for (f in items) {
             val enc = Uri.encode(f.name)
+            val encHtml = esc(enc)
             val name = esc(f.name)
             val nl = esc(f.name.lowercase(Locale.ROOT))
             val date = if (f.lastModified > 0) df.format(Date(f.lastModified)) else ""
             if (f.isDir) {
                 folders++
                 rows.append("<div class='row' data-n='$nl'><span class='ic'>${iconFor(f.name, true)}</span>")
-                    .append("<a class='nm' href='$enc/'>$name</a><span class='sz'>—</span>")
+                    .append("<a class='nm' href='$encHtml/'>$name</a><span class='sz'>—</span>")
                     .append("<span class='dt'>$date</span><span class='dl'></span></div>")
             } else {
                 files++
                 val size = if (f.size >= 0) f.size else 0L
                 total += size
                 rows.append("<div class='row' data-n='$nl'><span class='ic'>${iconFor(f.name, false)}</span>")
-                    .append("<a class='nm' href='$enc'>$name</a><span class='sz'>${Fmt.size(size)}</span>")
+                    .append("<a class='nm' href='$encHtml'>$name</a><span class='sz'>${Fmt.size(size)}</span>")
                     .append("<span class='dt'>$date</span>")
-                    .append("<a class='dl' href='$enc?dl=1'>Download</a></div>")
+                    .append("<a class='dl' href='$encHtml?dl=1'>Download</a></div>")
             }
         }
 
@@ -948,6 +1154,13 @@ class FileServer(
             acc += Uri.encode(seg) + "/"
             crumbs.append(" / <a href='$acc'>${esc(seg)}</a>")
         }
+
+        val uploadHtml = if (filesMode) "" else """
+<div class="up" id="drop"><div class="upic">⬆️</div><div class="uptxt"><div class="uptitle">Upload files</div><div class="upsub" id="upsub">Select one or more files, then press Upload</div></div><div class="upacts"><button class="upbtn ghost" id="upbtn" type="button">Choose files</button><button class="upbtn" id="upgo" type="button" disabled>Upload</button></div></div>
+<input id="filepicker" type="file" multiple hidden>
+<div class="picked" id="picked"></div>
+<div class="upwrap" id="upwrap"><div class="upname" id="upname"></div><div class="upbar"><div class="upfill" id="upfill"></div></div><div class="upstatus" id="upstatus"></div></div>
+"""
 
         return """<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>Flash Transfer</title>
@@ -1004,11 +1217,7 @@ h1{font-size:20px;margin:0}.sub{color:#8ea0bf;font-size:12px}
 </style></head><body><div class="wrap">
 <div class="top"><div class="logo">⚡</div><div><h1>Flash Transfer</h1><div class="sub">Lightning-fast Wi-Fi file sharing</div></div></div>
 <div class="crumbs">$crumbs</div>
-<div class="up" id="drop"><div class="upic">⬆️</div><div class="uptxt"><div class="uptitle">Upload files</div><div class="upsub" id="upsub">Select one or more files, then press Upload</div></div><div class="upacts"><button class="upbtn ghost" id="upbtn" type="button">Choose files</button><button class="upbtn" id="upgo" type="button" disabled>Upload</button></div></div>
-<input id="filepicker" type="file" multiple hidden>
-<div class="picked" id="picked"></div>
-<div class="upwrap" id="upwrap"><div class="upname" id="upname"></div><div class="upbar"><div class="upfill" id="upfill"></div></div><div class="upstatus" id="upstatus"></div></div>
-<input class="search" placeholder="Search in this folder..." oninput="f(this.value)">
+$uploadHtml<input class="search" placeholder="Search in this folder..." oninput="f(this.value)">
 <div class="card">$rows</div>
 <div class="stats">$folders folders · $files files · ${Fmt.size(total)}</div>
 <div class="foot">© 2026 Rahul Mandal • All rights reserved</div>
@@ -1088,5 +1297,7 @@ render();
     companion object {
         /** sendfile chunk: big enough for speed, small enough for a smooth live-speed readout */
         private const val CHUNK = 1L shl 20
+        /** Longest side of a generated thumbnail, in pixels. */
+        private const val THUMB_PX = 128
     }
 }
